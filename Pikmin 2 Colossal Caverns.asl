@@ -1,21 +1,24 @@
 //Pikmin 2: Colossal Caverns Autosplitter
 //by Buurazu
 
-state("Dolphin", "5.0-13603")
-{
-	long STARTLOC : 0x00C15BE0;
-}
+//note to self: find this by doing a string search for "GPVE01"
+//and pointer scanning the topmost result that ends in 0000
+state("Dolphin", "5.0-13827") { long STARTLOC : 0x00C44F50; }
+state("Dolphin", "5.0-13603") { long STARTLOC : 0x00C15BE0; }
+
 
 startup {
 	vars.timerModel = new TimerModel { CurrentState = timer };
 	
 	
 	settings.Add("treasuresleft",true,"\"X Treasures Left\" Splits");
-	settings.SetToolTip("treasuresleft","If checked, your splits are read as the number of treasures left, instead of number of treasures collected");
+	settings.SetToolTip("treasuresleft","If checked, splits beginning with a number are read as the number of treasures left, instead of number of treasures collected");
+	settings.Add("treasurename",true,"\"Treasure Name\" Splits");
+	settings.SetToolTip("treasuresleft","If checked, split names that match a treasure name will be autosplit upon collection (good for The Key in any%)");
 	settings.Add("globefirst",false,"First Split = Globe");
 	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting either globe treasure");
-	settings.Add("splitongeyser",true,"Split on Geyser");
-	settings.SetToolTip("globefirst","If checked, it'll autosplit on the Treasures Salvaged screen if you used the geyser");
+	settings.Add("geyserlast",true,"Last Split = Geyser");
+	settings.SetToolTip("globefirst","If checked, the last split will be autosplit on the Treasure Salvaged screen after using the geyser");
 	
 	// Taken from https://github.com/tduva/LiveSplit-ASL/blob/master/AlanWake.asl
 	// Based on: https://github.com/NoTeefy/LiveSnips/blob/master/src/snippets/checksum(hashing)/checksum.asl
@@ -56,10 +59,16 @@ init
 	var moduleSize = module.ModuleMemorySize;
 	print("Module Size: "+moduleSize.ToString()+" "+module.ModuleName);
 	string hash = vars.CalcModuleHash(module);
-
+	
 	switch (hash){
         case "079F3A179FC7F67902C6892CFF37BEEB": version = "5.0-13603"; break;
-        default: version = "Unknown"; break;
+		case "146782E54E61F41351337C9669D16FA4": version = "5.0-13827"; break;
+
+        default:
+		var message = MessageBox.Show(
+            "The S.S. Dolphin could not be located! (Unknown Dolphin version detected; your's is either too old or too new, and may or may not work)", 
+            "Colossal Caverns AutoSplitter");
+		break;
     }
 
 	vars.versionNumberOffset = 0x53AC28;
@@ -80,7 +89,7 @@ update
 				vars.treasureNameOffset = 0x5C52F8;
 				vars.gameTimerOffset = 0x53DC44;
 				vars.pokosOffset = 0xA0F608;
-				print(current.STARTLOC.ToString("X"));
+				print("Colossal Caverns " + vars.versionNumber + " located! Starting memory location: " + current.STARTLOC.ToString("X"));
 			}
 			else {
 				vars.versionNumber = "";
@@ -125,23 +134,25 @@ split
 	var currentSplitName = vars.timerModel.CurrentState.CurrentSplit.Name;
 	var currentSplit = vars.timerModel.CurrentState.CurrentSplitIndex;
 
-	//
-	if (settings["splitongeyser"] && vars.pokos > 0 && vars.prevPokos == 0) {
+	//final split = geyser
+	if (settings["geyserlast"] && currentSplit == vars.timerModel.CurrentState.Run.Count-1 && vars.pokos > 0 && vars.prevPokos == 0) {
 		return true;
 	}
 	
-	if (currentSplitName == vars.treasureName && vars.treasureName != vars.prevTreasureName) {
+	//split name = last collected treasure
+	if (settings["treasurename"] && currentSplitName == vars.treasureName && vars.treasureName != vars.prevTreasureName) {
 		return true;
 	}
 	
+	//first split = globe
 	if (settings["globefirst"] && currentSplit == 0 && vars.treasureName != vars.prevTreasureName &&
 	(vars.treasureName == "Spherical Atlas" || vars.treasureName == "Geographic Projection")) {
 		return true;
 	}
 
+	//check if the first word of the split name is a number
 	var firstWord = currentSplitName.Split(' ')[0];
 	int target;
-	//only check for splitting logic if the split name begins with a number
 	if (Int32.TryParse(firstWord, out target)) {
 		if (!settings["treasuresleft"]) target = 201 - target;
 		
