@@ -14,11 +14,11 @@ startup {
 	settings.Add("treasuresleft",true,"\"X Treasures Left\" Splits");
 	settings.SetToolTip("treasuresleft","If checked, splits beginning with a number are read as the number of treasures left, instead of number of treasures collected");
 	settings.Add("treasurename",true,"\"Treasure Name\" Splits");
-	settings.SetToolTip("treasuresleft","If checked, split names that match a treasure name will be autosplit upon collection (good for The Key in any%)");
+	settings.SetToolTip("treasurename","If checked, split names that match a treasure name will be autosplit upon collection (good for The Key in any%)");
 	settings.Add("globefirst",false,"First Split = Globe");
 	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting either globe treasure");
 	settings.Add("geyserlast",true,"Last Split = Geyser");
-	settings.SetToolTip("globefirst","If checked, the last split will be autosplit on the Treasure Salvaged screen after using the geyser");
+	settings.SetToolTip("geyserlast","If checked, the last split will be autosplit upon using the geyser");
 	
 	// Taken from https://github.com/tduva/LiveSplit-ASL/blob/master/AlanWake.asl
 	// Based on: https://github.com/NoTeefy/LiveSnips/blob/master/src/snippets/checksum(hashing)/checksum.asl
