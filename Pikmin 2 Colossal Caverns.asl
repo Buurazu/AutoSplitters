@@ -66,7 +66,7 @@ init
 
         default:
 		var message = MessageBox.Show(
-            "The S.S. Dolphin could not be located! (Unknown Dolphin version detected; your's is either too old or too new, and may or may not work)", 
+            "The S.S. Dolphin could not be located! (Unknown Dolphin version detected; your's is either too old or too new, and may or may not work. If you're fully updated, ping Buurazu#8042)", 
             "Colossal Caverns AutoSplitter");
 		break;
     }
