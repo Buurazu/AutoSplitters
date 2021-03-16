@@ -15,8 +15,8 @@ startup {
 	settings.SetToolTip("treasuresleft","If checked, splits beginning with a number are read as the number of treasures left, instead of number of treasures collected");
 	settings.Add("treasurename",true,"\"Treasure Name\" Splits");
 	settings.SetToolTip("treasurename","If checked, split names that match a treasure name will be autosplit upon collection (good for The Key in any%)");
-	settings.Add("globefirst",false,"First Split = Globe");
-	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting either globe treasure");
+	settings.Add("globefirst",false,"First Split = Crab");
+	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting the Spherical Atlas");
 	settings.Add("geyserlast",true,"Last Split = Geyser");
 	settings.SetToolTip("geyserlast","If checked, the last split will be autosplit upon using the geyser");
 	
@@ -146,7 +146,7 @@ split
 	
 	//first split = globe
 	if (settings["globefirst"] && currentSplit == 0 && vars.treasureName != vars.prevTreasureName &&
-	(vars.treasureName == "Spherical Atlas" || vars.treasureName == "Geographic Projection")) {
+	vars.treasureName == "Spherical Atlas") {
 		return true;
 	}
 
