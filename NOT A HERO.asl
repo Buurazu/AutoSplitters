@@ -12,6 +12,9 @@ int LEVELTIME3 : 0x46EFB4;
 int LEVELTIME4 : 0x46F46C;
 int LEVELTIME  : 0x46F530;
 byte ONLEVELCLEAR : 0x46ED54;
+//i hope these pointers don't break.
+//well, worst case scenario it doesn't autoreset on THE SHOOTORIAL, just like before I found this
+string255 LEVELNAME : 0x4A50D8, 0;
 }
 
 state("NOT A HERO", "Humble Bundle")
@@ -25,6 +28,7 @@ int LEVELTIME3 : 0x3C90F0;
 int LEVELTIME4 : 0x3C9154;
 int LEVELTIME  : 0x3C94E8;
 byte ONLEVELCLEAR : 0x3C8D81;
+string255 LEVELNAME : 0x3F97DC, 0, 0;
 }
 
 startup {
@@ -71,6 +75,7 @@ init {
 
 update
 {
+	print(current.LEVELNAME + "," + current.FULLTIME.ToString() + "," + vars.startFrame.ToString());
 	//probably dumb way to get the maximum value out of the four level time variables
 	string debugstr = "";
 	vars.maxTime = current.LEVELTIME; debugstr += vars.maxTime.ToString() + ",";
@@ -79,24 +84,22 @@ update
 	vars.maxTime = Math.Max(vars.maxTime, current.LEVELTIME4); debugstr += vars.maxTime.ToString() + ",";
 	//print(debugstr);
 	
-	//start full-game timer, and reset IL timer, as soon as the "load" screen begins
-	//this code would only trigger if you have yet to ever play a level this session
-	//(meaning the LEVELTIMEs are all 0)
+	//reset IL timer on game relaunch
 	if (current.LEVELTIME == 0 && current.FULLTIME > 0 && old.FULLTIME == 0) {
 		if (vars.timerModel.CurrentState.Run.Count == 1) {
 			vars.timerModel.Reset();
 		}
-		else if (settings.StartEnabled) {
-			vars.timerModel.Start();
-		}
 	}
-	//reset ILs, and start full-game timer, as soon as the "load" screen begins
+	//reset ILs (and full-game if THE SHOOTORIAL), and start full-game timer, as soon as the "load" screen begins
+	//note: full-game can't start here if you've yet to load a level (current and old.LEVELTIME == 0)
+	//can't find a good way around that
 	if (current.LEVELTIME == 0 && old.LEVELTIME != 0)
 	{
-		if (vars.timerModel.CurrentState.Run.Count == 1) {
+		vars.startFrame = 0;
+		if (vars.timerModel.CurrentState.Run.Count == 1 || current.LEVELNAME == "THE SHOOTORIAL") {
 			vars.timerModel.Reset();
 		}
-		else if (settings.StartEnabled) {
+		if (vars.timerModel.CurrentState.Run.Count > 1 && settings.StartEnabled) {
 			vars.timerModel.Start();
 		}
 	}
