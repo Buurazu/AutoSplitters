@@ -41,6 +41,12 @@ startup {
 	//used to reset the elapsedGameTime array after resets
 	vars.haveSplit = false;
 	
+	
+	settings.Add("tutorialreset",true,"Auto-Reset on The Shootorial");
+	settings.SetToolTip("tutorialreset","If checked, full-game runs will automatically reset upon starting The Shootorial");
+	settings.Add("tutorialstart",true,"Start Only on The Shootorial");
+	settings.SetToolTip("tutorialstart","If checked, full-game runs will only start when you play The Shootorial, otherwise the timer starts upon starting any level");
+	
 	// Taken from https://github.com/tduva/LiveSplit-ASL/blob/master/AlanWake.asl
 	// Based on: https://github.com/NoTeefy/LiveSnips/blob/master/src/snippets/checksum(hashing)/checksum.asl
 	Func<ProcessModuleWow64Safe, string> CalcModuleHash = (module) => {
@@ -75,7 +81,7 @@ init {
 
 update
 {
-	print(current.LEVELNAME + "," + current.FULLTIME.ToString() + "," + vars.startFrame.ToString());
+	//print(current.LEVELNAME + "," + current.FULLTIME.ToString() + "," + vars.startFrame.ToString());
 	//probably dumb way to get the maximum value out of the four level time variables
 	string debugstr = "";
 	vars.maxTime = current.LEVELTIME; debugstr += vars.maxTime.ToString() + ",";
@@ -96,11 +102,13 @@ update
 	if (current.LEVELTIME == 0 && old.LEVELTIME != 0)
 	{
 		vars.startFrame = 0;
-		if (vars.timerModel.CurrentState.Run.Count == 1 || current.LEVELNAME == "THE SHOOTORIAL") {
+		if (vars.timerModel.CurrentState.Run.Count == 1 ||
+		(settings["tutorialreset"] && current.LEVELNAME == "THE SHOOTORIAL")) {
 			vars.timerModel.Reset();
 		}
 		if (vars.timerModel.CurrentState.Run.Count > 1 && settings.StartEnabled) {
-			vars.timerModel.Start();
+			if ((settings["tutorialstart"] && current.LEVELNAME == "THE SHOOTORIAL") || !settings["tutorialstart"])
+				vars.timerModel.Start();
 		}
 	}
 	//the timer starts counting up during the "load" screen, but is frozen at 0 until the level appears
