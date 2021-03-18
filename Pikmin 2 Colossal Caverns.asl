@@ -62,8 +62,9 @@ init
 	string hash = vars.CalcModuleHash(module);
 	
 	switch (hash){
-        case "079F3A179FC7F67902C6892CFF37BEEB": version = "5.0-13603"; break;
+		case "5DF069ABAEEE0E6306A774602DAC5D46": version = "5.0-13871"; break;
 		case "146782E54E61F41351337C9669D16FA4": version = "5.0-13827"; break;
+        case "079F3A179FC7F67902C6892CFF37BEEB": version = "5.0-13603"; break;
 
         default:
 		var message = MessageBox.Show(
