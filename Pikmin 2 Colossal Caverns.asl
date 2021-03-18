@@ -3,6 +3,7 @@
 
 //note to self: find this by doing a string search for "GPVE01"
 //and pointer scanning the topmost result that ends in 0000
+state("Dolphin", "5.0-13871") { long STARTLOC : 0x00C46190; }
 state("Dolphin", "5.0-13827") { long STARTLOC : 0x00C44F50; }
 state("Dolphin", "5.0-13603") { long STARTLOC : 0x00C15BE0; }
 
