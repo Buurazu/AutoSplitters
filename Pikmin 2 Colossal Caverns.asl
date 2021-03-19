@@ -148,6 +148,8 @@ reset
 
 split
 {	
+	if (vars.gameTime == 0) return false;
+	
 	var currentSplitName = vars.timerModel.CurrentState.CurrentSplit.Name;
 	var currentSplit = vars.timerModel.CurrentState.CurrentSplitIndex;
 
