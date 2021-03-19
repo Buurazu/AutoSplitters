@@ -109,6 +109,9 @@ update
 		print("Pikmin 2 unloaded");
 		vars.startLoc = IntPtr.Zero;
 		vars.versionNumber = "";
+		if (settings.ResetEnabled) {
+			vars.timerModel.Reset();
+		}
 	}
 	//don't run anything if we can't determine Colossal Caverns is running in Dolphin
 	if (vars.versionNumber == "") return false;
