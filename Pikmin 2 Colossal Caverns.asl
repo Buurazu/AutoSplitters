@@ -35,27 +35,6 @@ init
 	vars.gameTime = 0;
 	vars.pokos = 0;
 	
-	//SigScan function for locating beginning location of Gamecube memory
-	Action<SigScanTarget, string> search = (theTarget, name) => {
-	foreach (var page in memory.MemoryPages(true))
-	{
-		var bytes = memory.ReadBytes(page.BaseAddress, (int)page.RegionSize);
-		if (bytes == null)
-			continue;
-		//print(page.ToString());
-		//print(page.BaseAddress.ToString("X") + " " + page.RegionSize.ToString());
-		var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
-		vars.addr = scanner.Scan(theTarget); 
-
-		if (vars.addr != IntPtr.Zero)
-		{
-			print(name + " found at 0x" + vars.addr.ToString("X"));
-			break;
-		}
-	}
-	};
-	vars.search = search;
-	
 	//Colossal Caverns Version 2.2 text offset
 	vars.versionNumberOffset = 0x53AC28;
 	vars.versionNumber = "";
@@ -67,22 +46,26 @@ init
 
 update
 {
-	//check for the Gamecube's memory region once per second
+	//check for the Gamecube's memory region every few seconds
 	if (vars.startLoc == IntPtr.Zero) {
 		vars.checkedForGPVE += 1;
 		
-		//"GPVE01"
 		if ((int)vars.checkedForGPVE % 120 == 0) {
 			print("Searching for Pikmin 2 memory header...");
-			SigScanTarget target = new SigScanTarget(0, "47 50 56 45 30 31 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00");
-
-			vars.search(target,"Start of Pikmin 2");
-			if (vars.addr != IntPtr.Zero) {
-				vars.startLoc = vars.addr;
+			foreach (var page in memory.MemoryPages(true))
+			{
+				//print(page.BaseAddress.ToString("X") + " " + page.RegionSize.ToString());
+				if ((int)page.RegionSize < 67108864) continue; //checking for 64MB or higher
+				string hopefullyGPVE01 = memory.ReadString((IntPtr)(page.BaseAddress), 6);
+				if (hopefullyGPVE01 == "GPVE01") {
+					print("Pikmin 2 memory found at 0x" + page.BaseAddress.ToString("X"));
+					vars.startLoc = page.BaseAddress;
+					break;
+				}
 			}
 		}
 		//don't run the rest of the update function until vars.startLoc != 0
-		return false;
+		if (vars.startLoc == IntPtr.Zero) return false;
 	}
 	
 	//determine what version of Colossal Caverns has been loaded
