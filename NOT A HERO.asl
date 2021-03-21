@@ -40,6 +40,7 @@ startup {
 	vars.justBeatLevel = false;
 	//used to reset the elapsedGameTime array after resets
 	vars.haveSplit = false;
+	vars.splitNum = 0;
 	
 	
 	settings.Add("tutorialreset",true,"Auto-Reset on The Shootorial");
@@ -89,6 +90,13 @@ update
 	vars.maxTime = Math.Max(vars.maxTime, current.LEVELTIME3); debugstr += vars.maxTime.ToString() + ",";
 	vars.maxTime = Math.Max(vars.maxTime, current.LEVELTIME4); debugstr += vars.maxTime.ToString() + ",";
 	//print(debugstr);
+	
+	vars.prevSplitNum = vars.splitNum;
+	vars.splitNum = vars.timerModel.CurrentState.CurrentSplitIndex;
+	//a skip split has just occurred, so copy the previous game time over
+	if (vars.splitNum > vars.prevSplitNum && (!vars.justBeatLevel || vars.elapsedGameTime[vars.splitNum] == 0)) {
+		vars.elapsedGameTime[vars.splitNum] = vars.elapsedGameTime[vars.splitNum-1];
+	}
 	
 	//reset IL timer on game relaunch
 	if (current.LEVELTIME == 0 && current.FULLTIME > 0 && old.FULLTIME == 0) {
