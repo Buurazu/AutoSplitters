@@ -61,6 +61,11 @@ init
 		vars.search(target,"Game:set_Manager");
 		vars.gameManagerLoc = memory.ReadValue<long>((IntPtr)((long)vars.addr + 14));
 		vars.gameSessionLoc = vars.gameManagerLoc + 8;
+		//now if the version offset changes between versions, that'd be awkward
+		var VERSIONoffset = 0x28;
+		var gameManager = memory.ReadValue<long>((IntPtr)vars.gameManagerLoc);
+		var versionStringLoc = memory.ReadValue<long>((IntPtr)(gameManager + (long)VERSIONoffset));
+		vars.version = memory.ReadString((IntPtr)(versionStringLoc + 0x14), 10);
 	}
 	
 	//Locate HP2SR's BasePatches.InitSearchForMe
@@ -80,7 +85,7 @@ init
 start
 {	
 	//HunieMod is running
-	if (vars.modVarLoc != 0) {
+	if (vars.modVarLoc != 0 && false) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		//111 = new game just started
 		if (theVar == 111) return true;
@@ -91,6 +96,10 @@ start
 		var CANVASoffset = 0x68;
 		var TCoffset = 0x38; //isTitleCanvas bool
 		var LGoffset = 0x98; //_loadingGame bool (UiTitleCanvas only)
+		if (vars.version == "1.0.5") {
+			//achievement update shifted the uimanager down
+			UIMANAGERoffset = 0x50;
+		}
 		
 		var gameManager = memory.ReadValue<long>((IntPtr)vars.gameManagerLoc);
 		var uiManager = memory.ReadValue<long>((IntPtr)(gameManager + (long)UIMANAGERoffset));
@@ -131,6 +140,10 @@ reset
 		var CANVASoffset = 0x68;
 		var TCoffset = 0x38; //isTitleCanvas bool
 		var UGoffset = 0xF2; //_unloadingGame bool (UiGameCanvas only)
+		if (vars.version == "1.0.5") {
+			//achievement update shifted the uimanager down
+			UIMANAGERoffset = 0x50;
+		}
 		
 		//only check for resets once our new Game.Session has loaded
 		var session = memory.ReadValue<long>((IntPtr)vars.gameSessionLoc);
@@ -182,6 +195,11 @@ split
 		var BONUSoffset = 0x51; //PuzzleStatus._bonusRound
 		
 		var PUZZACTIVEoffset = 0x198; //PuzzleManager._isPuzzleActive
+		
+		if (vars.version == "1.0.5") {
+			//achievement update shifted the uimanager down
+			UIMANAGERoffset = 0x50;
+		}
 		
 		//only check for splits once our new Game.Session has loaded
 		var session = memory.ReadValue<long>((IntPtr)vars.gameSessionLoc);
