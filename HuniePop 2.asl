@@ -66,6 +66,7 @@ init
 		var gameManager = memory.ReadValue<long>((IntPtr)vars.gameManagerLoc);
 		var versionStringLoc = memory.ReadValue<long>((IntPtr)(gameManager + (long)VERSIONoffset));
 		vars.version = memory.ReadString((IntPtr)(versionStringLoc + 0x14), 10);
+		print(vars.version);
 	}
 	
 	//Locate HP2SR's BasePatches.InitSearchForMe
@@ -85,7 +86,7 @@ init
 start
 {	
 	//HunieMod is running
-	if (vars.modVarLoc != 0 && false) {
+	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		//111 = new game just started
 		if (theVar == 111) return true;
