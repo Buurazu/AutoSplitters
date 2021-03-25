@@ -17,6 +17,12 @@ startup {
 	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting the Spherical Atlas");
 	settings.Add("geyserlast",true,"Last Split = Geyser");
 	settings.SetToolTip("geyserlast","If checked, the last split will be autosplit upon using the geyser");
+	settings.Add("autooptions",false,"Automatically Set Game Options");
+	settings.SetToolTip("autooptions","If checked, Onion Mode, 200 Pikmin Limit, and No Treasure Cutscene are turned on, and the cursor is moved to Begin!, at game launch. Also, the captain and music choices are remembered between game resets. (Doesn't affect loading savestates)");
+	
+	vars.captainOne = 0;
+	vars.captainTwo = 1;
+	vars.musicChoice = 0;
 	
 	//Big Endian to Little Endian
 	Func<int, int> BEtoLE = (beint) => {
@@ -34,10 +40,13 @@ init
 	vars.treasureName = "Pikmin 4 Alpha Disc";
 	vars.gameTime = 0;
 	vars.pokos = 0;
+	vars.optionsMusic = 0;
 	
 	//Colossal Caverns Version 2.2 text offset
 	vars.versionNumberOffset = 0x53AC28;
 	vars.versionNumber = "";
+	
+	//vars.versionNumberOffsets = new int[] { 0x53AC28 };
 	
 	vars.startLoc = IntPtr.Zero;
 	vars.dolphinLoc = IntPtr.Zero;
@@ -80,6 +89,16 @@ update
 				vars.treasureNameOffset = 0x5C52F8;
 				vars.gameTimerOffset = 0x53DC44;
 				vars.pokosOffset = 0xA0F608;
+				
+				vars.optionsOffset = 0x53DBE4;
+				vars.captainOneOffset = vars.optionsOffset - 4;
+				vars.captainTwoOffset = 0x53D332; //idk why captain 2 selection is way far away
+				vars.musicOffset = vars.optionsOffset - 2;
+				vars.twoHundredOffset = vars.optionsOffset + 2;
+				vars.onionOffset = vars.optionsOffset + 0x0A;
+				vars.treasureCutsceneOffset = vars.optionsOffset + 0x24;
+				vars.optionsMusicOffset = vars.optionsOffset + 0x5A;
+				
 				print("Colossal Caverns " + vars.versionNumber + " located!");
 			}
 			else {
@@ -111,13 +130,32 @@ update
 	vars.prevPokos = vars.pokos;
 	vars.pokos = vars.BEtoLE(memory.ReadValue<int>((IntPtr)(vars.startLoc + vars.pokosOffset)));
 	
+	vars.prevOptionsMusic = vars.optionsMusic;
+	vars.optionsMusic = memory.ReadValue<bool>((IntPtr)(vars.startLoc+vars.optionsMusicOffset));
+	
 	//print(vars.gameTime.ToString());
 }
 
 start
 {	
+	if (settings["autooptions"]) {
+		//set the preset options on game reset
+		var optionsCursor = memory.ReadValue<byte>((IntPtr)(vars.startLoc+vars.optionsOffset));
+		if (vars.optionsMusic == true && vars.prevOptionsMusic == false && optionsCursor == 0) {
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.captainOneOffset), new byte [] { (byte)vars.captainOne });
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.captainTwoOffset), new byte [] { (byte)vars.captainTwo });
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.musicOffset), new byte [] { (byte)vars.musicChoice });
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.onionOffset), new byte [] {3});
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.twoHundredOffset), new byte [] {1});
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.treasureCutsceneOffset), new byte [] {1});
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.optionsOffset), new byte [] {0x0A});
+		}
+	}
 	//the gameTime hangs on 1 for a few frames before real time should begin so let's start real time at 2
 	if (vars.gameTime > 1 && vars.prevGameTime <= 1) {
+		vars.captainOne = memory.ReadValue<byte>((IntPtr)(vars.startLoc+vars.captainOneOffset));
+		vars.captainTwo = memory.ReadValue<byte>((IntPtr)(vars.startLoc+vars.captainTwoOffset));
+		vars.musicChoice = memory.ReadValue<byte>((IntPtr)(vars.startLoc+vars.musicOffset));
 		return true;
 	}
 }
