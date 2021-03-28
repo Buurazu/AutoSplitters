@@ -11,14 +11,14 @@ startup {
 	
 	settings.Add("treasuresleft",true,"\"X Treasures Left\" Splits");
 	settings.SetToolTip("treasuresleft","If checked, splits beginning with a number are read as the number of treasures left, instead of number of treasures collected");
-	settings.Add("treasurename",true,"\"Treasure Name\" Splits");
-	settings.SetToolTip("treasurename","If checked, split names that match a treasure name will be autosplit upon collection (good for The Key in any%)");
-	settings.Add("globefirst",false,"First Split = Crab");
+	settings.Add("globefirst",false,"First Split = Spherical Atlas");
 	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting the Spherical Atlas");
+	settings.Add("keyfirst",false,"First Split = The Key");
+	settings.SetToolTip("keyfirst","If checked, the first split will be autosplit upon collecting The Key");
 	settings.Add("geyserlast",true,"Last Split = Geyser");
 	settings.SetToolTip("geyserlast","If checked, the last split will be autosplit upon using the geyser");
 	settings.Add("autooptions",false,"Automatically Set Game Options");
-	settings.SetToolTip("autooptions","If checked, Onion Mode, 200 Pikmin Limit, and No Treasure Cutscene are turned on, and the cursor is moved to Begin!, at game launch. Also, the captain and music choices are remembered between game resets. (Doesn't affect loading savestates)");
+	settings.SetToolTip("autooptions","If checked, Onion Mode and 200 Pikmin Limit are turned on, and the cursor is moved to Begin!, at game launch. Also, the captain and music choices are remembered between game resets. (Doesn't affect loading savestates)");
 	
 	vars.captainOne = 0;
 	vars.captainTwo = 1;
@@ -38,15 +38,14 @@ init
 {	
 	vars.treasuresLeft = 0;
 	vars.treasureName = "Pikmin 4 Alpha Disc";
+	vars.globeCollected = 0; vars.keyCollected = 0;
 	vars.gameTime = 0;
 	vars.pokos = 0;
-	vars.optionsMusic = 0;
+	vars.optionsMusic = false;
 	
-	//Colossal Caverns Version 2.2 text offset
-	vars.versionNumberOffset = 0x53AC28;
+	//version number offsets for Version 2.2, 2.3
+	vars.versionNumberOffsets = new int[] { 0x53AC28, 0x53CB68 };
 	vars.versionNumber = "";
-	
-	//vars.versionNumberOffsets = new int[] { 0x53AC28 };
 	
 	vars.startLoc = IntPtr.Zero;
 	vars.dolphinLoc = IntPtr.Zero;
@@ -83,26 +82,47 @@ update
 		if (vars.versionNumber == "") {
 			//boy I sure hope the versionNumberOffset doesn't differ between versions hahahaha
 			//I'll find some way to differentiate versions if I have to
-			vars.versionNumber = memory.ReadString((IntPtr)(vars.startLoc + vars.versionNumberOffset), 30);
-			if (vars.versionNumber == "Version 2.2") {
-				vars.treasuresLeftOffset = 0x53DBCB;
-				vars.treasureNameOffset = 0x5C52F8;
-				vars.gameTimerOffset = 0x53DC44;
-				vars.pokosOffset = 0xA0F608;
-				
-				vars.optionsOffset = 0x53DBE4;
-				vars.captainOneOffset = vars.optionsOffset - 4;
-				vars.captainTwoOffset = 0x53D332; //idk why captain 2 selection is way far away
-				vars.musicOffset = vars.optionsOffset - 2;
-				vars.twoHundredOffset = vars.optionsOffset + 2;
-				vars.onionOffset = vars.optionsOffset + 0x0A;
-				vars.treasureCutsceneOffset = vars.optionsOffset + 0x24;
-				vars.optionsMusicOffset = vars.optionsOffset + 0x5A;
-				
-				print("Colossal Caverns " + vars.versionNumber + " located!");
-			}
-			else {
-				vars.versionNumber = "";
+			foreach (int versionNumberOffset in vars.versionNumberOffsets) {
+				string versionCheck = memory.ReadString((IntPtr)(vars.startLoc + versionNumberOffset), 30);
+				if (versionCheck == "Version 2.2") {
+					vars.versionNumber = versionCheck;
+					vars.treasuresLeftOffset = 0x53DBCB;
+					vars.globeOffset = 0xA10206;
+					vars.gameTimerOffset = 0x53DC44;
+					vars.pokosOffset = 0xA0F608;
+					
+					vars.optionsOffset = 0x53DBE4;
+					vars.beginOffset = 0x0A;
+					vars.captainOneOffset = vars.optionsOffset - 4;
+					vars.captainTwoOffset = 0x53D332; //idk why captain 2 selection is way far away
+					vars.musicOffset = vars.optionsOffset - 2;
+					vars.twoHundredOffset = vars.optionsOffset + 2;
+					vars.onionOffset = vars.optionsOffset + 0x0A;
+					vars.treasureCutsceneOffset = vars.optionsOffset + 0x24;
+					vars.optionsMusicOffset = vars.optionsOffset + 0x5A;
+				}
+				else if (versionCheck == "Version 2.3") {
+					vars.versionNumber = versionCheck;
+					vars.treasuresLeftOffset = 0x5403DB;
+					//vars.explorationKitOffset = 0xA1FE44; //bit 3 = good globe
+					vars.globeOffset = 0xA20AE2; //key offset = +2, it equals 2 when its collected
+					vars.gameTimerOffset = 0x540474;
+					vars.pokosOffset = 0xA1FEE4;
+					
+					vars.optionsOffset = 0x5403F5;
+					vars.beginOffset = 0x09;
+					vars.captainOneOffset = vars.optionsOffset - 4;
+					vars.captainTwoOffset = 0x53FDFA; //idk why captain 2 selection is way far away
+					vars.musicOffset = vars.optionsOffset - 2;
+					vars.twoHundredOffset = vars.optionsOffset + 2;
+					vars.onionOffset = vars.optionsOffset + 0x0A;
+					vars.treasureCutsceneOffset = 0;
+					vars.optionsMusicOffset = vars.optionsOffset + 0x79;
+				}
+				if (vars.versionNumber != "") {
+					print("Colossal Caverns " + vars.versionNumber + " located!");
+					break;
+				}
 			}
 		}
 	}
@@ -122,7 +142,12 @@ update
 	vars.treasuresLeft = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.treasuresLeftOffset));
 	
 	vars.prevTreasureName = vars.treasureName;
-	vars.treasureName = memory.ReadString((IntPtr)(vars.startLoc + vars.treasureNameOffset), 30);
+	//vars.treasureName = memory.ReadString((IntPtr)(vars.startLoc + vars.treasureNameOffset), 30);
+	
+	vars.prevGlobeCollected = vars.globeCollected;
+	vars.prevKeyCollected = vars.keyCollected;
+	vars.globeCollected = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.globeOffset));
+	vars.keyCollected = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.globeOffset + 2));
 	
 	vars.prevGameTime = vars.gameTime;
 	vars.gameTime = vars.BEtoLE(memory.ReadValue<int>((IntPtr)(vars.startLoc + vars.gameTimerOffset)));
@@ -147,8 +172,9 @@ start
 			memory.WriteBytes((IntPtr)(vars.startLoc+vars.musicOffset), new byte [] { (byte)vars.musicChoice });
 			memory.WriteBytes((IntPtr)(vars.startLoc+vars.onionOffset), new byte [] {3});
 			memory.WriteBytes((IntPtr)(vars.startLoc+vars.twoHundredOffset), new byte [] {1});
-			memory.WriteBytes((IntPtr)(vars.startLoc+vars.treasureCutsceneOffset), new byte [] {1});
-			memory.WriteBytes((IntPtr)(vars.startLoc+vars.optionsOffset), new byte [] {0x0A});
+			if (vars.treasureCutsceneOffset != 0)
+				memory.WriteBytes((IntPtr)(vars.startLoc+vars.treasureCutsceneOffset), new byte [] {1});
+			memory.WriteBytes((IntPtr)(vars.startLoc+vars.optionsOffset), new byte [] {(byte)vars.beginOffset});
 		}
 	}
 	//the gameTime hangs on 1 for a few frames before real time should begin so let's start real time at 2
@@ -179,14 +205,20 @@ split
 		return true;
 	}
 	
+	/*
 	//split name = last collected treasure
 	if (settings["treasurename"] && currentSplitName == vars.treasureName && vars.treasureName != vars.prevTreasureName) {
 		return true;
-	}
+	}*/
 	
 	//first split = globe
-	if (settings["globefirst"] && currentSplit == 0 && vars.treasureName != vars.prevTreasureName &&
-	vars.treasureName == "Spherical Atlas") {
+	if (settings["globefirst"] && currentSplit == 0 && vars.globeCollected != vars.prevGlobeCollected &&
+	vars.globeCollected == 2) {
+		return true;
+	}
+	//first split = key
+	if (settings["keyfirst"] && currentSplit == 0 && vars.keyCollected != vars.prevKeyCollected &&
+	vars.keyCollected == 2) {
 		return true;
 	}
 
