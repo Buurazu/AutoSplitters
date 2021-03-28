@@ -37,7 +37,6 @@ startup {
 init
 {	
 	vars.treasuresLeft = 0;
-	vars.treasureName = "Pikmin 4 Alpha Disc";
 	vars.globeCollected = 0; vars.keyCollected = 0;
 	vars.gameTime = 0;
 	vars.pokos = 0;
@@ -48,7 +47,6 @@ init
 	vars.versionNumber = "";
 	
 	vars.startLoc = IntPtr.Zero;
-	vars.dolphinLoc = IntPtr.Zero;
 	vars.checkedForGPVE = -1;
 }
 
@@ -80,8 +78,6 @@ update
 	var isPikmin2Loaded = memory.ReadString((IntPtr)(vars.startLoc), 6);
 	if (isPikmin2Loaded == "GPVE01") {
 		if (vars.versionNumber == "") {
-			//boy I sure hope the versionNumberOffset doesn't differ between versions hahahaha
-			//I'll find some way to differentiate versions if I have to
 			foreach (int versionNumberOffset in vars.versionNumberOffsets) {
 				string versionCheck = memory.ReadString((IntPtr)(vars.startLoc + versionNumberOffset), 30);
 				if (versionCheck == "Version 2.2") {
@@ -140,9 +136,6 @@ update
 	
 	vars.prevTreasuresLeft = vars.treasuresLeft;
 	vars.treasuresLeft = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.treasuresLeftOffset));
-	
-	vars.prevTreasureName = vars.treasureName;
-	//vars.treasureName = memory.ReadString((IntPtr)(vars.startLoc + vars.treasureNameOffset), 30);
 	
 	vars.prevGlobeCollected = vars.globeCollected;
 	vars.prevKeyCollected = vars.keyCollected;
@@ -204,12 +197,6 @@ split
 	if (settings["geyserlast"] && currentSplit == vars.timerModel.CurrentState.Run.Count-1 && vars.pokos > 0 && vars.prevPokos == 0) {
 		return true;
 	}
-	
-	/*
-	//split name = last collected treasure
-	if (settings["treasurename"] && currentSplitName == vars.treasureName && vars.treasureName != vars.prevTreasureName) {
-		return true;
-	}*/
 	
 	//first split = globe
 	if (settings["globefirst"] && currentSplit == 0 && vars.globeCollected != vars.prevGlobeCollected &&
