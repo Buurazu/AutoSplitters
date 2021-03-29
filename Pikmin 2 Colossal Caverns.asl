@@ -11,6 +11,8 @@ startup {
 	
 	settings.Add("treasuresleft",true,"\"X Treasures Left\" Splits");
 	settings.SetToolTip("treasuresleft","If checked, splits beginning with a number are read as the number of treasures left, instead of number of treasures collected");
+	settings.Add("treasurename",true,"\"Treasure Name\" Splits");
+	settings.SetToolTip("treasurename","If checked, split names that match a treasure name will be autosplit upon collection");
 	settings.Add("globefirst",false,"First Split = Spherical Atlas");
 	settings.SetToolTip("globefirst","If checked, the first split will be autosplit upon collecting the Spherical Atlas");
 	settings.Add("keyfirst",false,"First Split = The Key");
@@ -32,12 +34,15 @@ startup {
 		return beint;
 	};
 	vars.BEtoLE = BEtoLE;
+	
+	vars.treasureNames = new string[] { "Rubber Ugly", "Insect Condo", "Meat Satchel", "Coiled Launcher", "Confection Hoop", "Omniscient Sphere", "Love Sphere", "Mirth Sphere", "Maternal Sculpture", "Stupendous Lens", "Leviathan Feather", "Superstrong Stabilizer", "Space Wave Receiver", "Joy Receptacle", "Worthless Statue", "Priceless Statue", "Triple Sugar Threat", "King of Sweets", "Diet Doomer", "Pale Passion", "Boom Cone", "Bug Bait", "Milk Tub", "Petrified Heart", "Regal Diamond", "Princess Pearl", "Silencer", "Armored Nut", "Chocolate Cushion", "Sweet Dreamer", "Cosmic Archive", "Cupid's Grenade", "Science Project", "Manual Honer", "Broken Food Master", "Sud Generator", "Wiggle Noggin", "Omega Flywheel", "Lustrous Element", "Superstick Textile", "Possessed Squash", "Gyroid Bust", "Sunseed Berry", "Glee Spinner", "Decorative Goo", "Anti-hiccup Fungus", "Crystal King", "Fossilized Ursidae", "Time Capsule", "Olimarnite Shell", "Conifer Spire", "Abstract Masterpiece", "Arboreal Frippery", "Onion Replica", "Infernal Vegetable", "Adamantine Girdle", "Director of Destiny", "Colossal Fossil", "Invigorator", "Vacuum Processor", "Mirrored Element", "Nouveau Table", "Pink Menace", "Frosty Bauble", "Gemstar Husband", "Gemstar Wife", "Universal Com", "Joyless Jewel", "Fleeting Art Form", "Innocence Lost", "Icon of Progress", "Unspeakable Wonder", "Aquatic Mine", "Temporal Mechanism", "Essential Furnishing", "Flame Tiller", "Doomsday Apparatus", "Impediment Scourge", "Future Orb", "Shock Therapist", "Flare Cannon", "Comedy Bomb", "Monster Pump", "Mystical Disc", "Vorpal Platter", "Taste Sensation", "Lip Service", "Utter Scrap", "Paradoxical Enigma", "King of Bugs", "Essence of Rage", "Essence of Despair", "Essence of True Love", "Essence of Desire", "Citrus Lump", "Behemoth Jaw", "Anxious Sprout", "Implement of Toil", "Luck Wafer", "Meat of Champions", "Talisman of Life", "Strife Monolith", "Boss Stone", "Toxic Toadstool", "Growshroom", "Indomitable CPU", "Network Mainbrain", "Repair Juggernaut", "Exhausted Superstick", "Pastry Wheel", "Combustion Berry", "Imperative Cookie", "Compelling Cookie", "Impenetrable Cookie", "Comfort Cookie", "Succulent Mattress", "Corpulent Nut", "Alien Billboard", "Massage Girdle", "Crystallized Telepathy", "Crystallized Telekinesis", "Crystallized Clairvoyance", "Eternal Emerald Eye", "Tear Stone", "Crystal Clover", "Danger Chime", "Sulking Antenna", "Spouse Alert", "Master's Instrument", "Extreme Perspirator", "Pilgrim Bulb", "Stone of Glory", "Furious Adhesive", "Quenching Emblem", "Flame of Tomorrow", "Love Nugget", "Child of the Earth", "Disguised Delicacy", "Proton AA", "Fuel Reservoir", "Optical Illustration", "Durable Energy Cell", "Courage Reactor", "Thirst Activator", "Harmonic Synthesizer", "Merciless Extractor", "Remembered Old Buddy", "Fond Gyro Block", "Memorable Gyro Block", "Lost Gyro Block", "Favorite Gyro Block", "Treasured Gyro Block", "Fortified Delicacy", "Scrumptious Shell", "Memorial Shell", "Chance Totem", "Dream Architect", "Spiny Alien Treat", "Spirit Flogger", "Mirrored Stage", "Enamel Buster", "Drought Ender", "White Goodness", "Salivatrix", "Creative Inspiration", "Massive Lid", "Happiness Emblem", "Survival Ointment", "Mysterious Remains", "Dimensional Slicer", "Yellow Taste Tyrant", "Hypnotic Platter", "Gherkin Gate", "Healing Cask", "Pondering Emblem", "Activity Arouser", "Stringent Container", "Patience Tester", "Endless Repository", "Fruit Guard", "Nutrient Silo", "Drone Supplies", "Unknown Merit", "Seed of Greed", "Heavy-duty Magnetizer", "Air Brake", "Hideous Victual", "Emperor Whistle", "Brute Knuckles", "Dream Material", "Amplified Amplifier", "Professional Noisemaker", "Stellar Orb", "Justice Alloy", "Forged Courage", "Repugnant Appendage", "Prototype Detector", "Five-man Napsack", "Spherical Atlas", "Geographic Projection", "The Key" };
+
 }
 
 init
 {	
 	vars.treasuresLeft = 0;
-	vars.globeCollected = 0; vars.keyCollected = 0;
+	vars.prevTreasuresCollected = new byte[201]; vars.treasuresCollected = new byte[201];
 	vars.gameTime = 0;
 	vars.pokos = 0;
 	vars.optionsMusic = false;
@@ -83,7 +88,10 @@ update
 				if (versionCheck == "Version 2.2") {
 					vars.versionNumber = versionCheck;
 					vars.treasuresLeftOffset = 0x53DBCB;
-					vars.globeOffset = 0xA10206;
+					
+					vars.treasuresOffset = 0xA10130;
+					vars.explorationOffset = 0xA101FC;
+					
 					vars.gameTimerOffset = 0x53DC44;
 					vars.pokosOffset = 0xA0F608;
 					
@@ -100,8 +108,10 @@ update
 				else if (versionCheck == "Version 2.3") {
 					vars.versionNumber = versionCheck;
 					vars.treasuresLeftOffset = 0x5403DB;
-					//vars.explorationKitOffset = 0xA1FE44; //bit 3 = good globe
-					vars.globeOffset = 0xA20AE2; //key offset = +2, it equals 2 when its collected
+					
+					vars.treasuresOffset = 0xA20A0C;
+					vars.explorationOffset = 0xA20AD8;
+					
 					vars.gameTimerOffset = 0x540474;
 					vars.pokosOffset = 0xA1FEE4;
 					
@@ -117,6 +127,24 @@ update
 				}
 				if (vars.versionNumber != "") {
 					print("Colossal Caverns " + vars.versionNumber + " located!");
+					
+					//the code used to print out list of treasure names
+					/*
+					var treasureNameLoc = vars.startLoc + 0xA94D79;
+					string theArray = "";
+					for (int i = 0; i < 201; i++) {
+						string currentName = memory.ReadString((IntPtr)(treasureNameLoc), 40);
+						treasureNameLoc += (currentName.Length) + 1;
+						currentName = memory.ReadString((IntPtr)(treasureNameLoc), 40);
+						currentName = currentName.Replace("\n"," ").Substring(0,currentName.Length-3);
+						theArray += "\"" + currentName + "\", ";
+						treasureNameLoc += (currentName.Length) + 6;
+						//print(treasureNameLoc.ToString("X"));
+					}
+					theArray = theArray.Replace("  ", " ");
+					print(theArray);
+					*/
+					
 					break;
 				}
 			}
@@ -137,11 +165,6 @@ update
 	vars.prevTreasuresLeft = vars.treasuresLeft;
 	vars.treasuresLeft = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.treasuresLeftOffset));
 	
-	vars.prevGlobeCollected = vars.globeCollected;
-	vars.prevKeyCollected = vars.keyCollected;
-	vars.globeCollected = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.globeOffset));
-	vars.keyCollected = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.globeOffset + 2));
-	
 	vars.prevGameTime = vars.gameTime;
 	vars.gameTime = vars.BEtoLE(memory.ReadValue<int>((IntPtr)(vars.startLoc + vars.gameTimerOffset)));
 	
@@ -151,6 +174,13 @@ update
 	vars.prevOptionsMusic = vars.optionsMusic;
 	vars.optionsMusic = memory.ReadValue<bool>((IntPtr)(vars.startLoc+vars.optionsMusicOffset));
 	
+	Array.Copy(vars.treasuresCollected, vars.prevTreasuresCollected, 201);
+	for (int i = 0; i <= 187; i++) {
+		vars.treasuresCollected[i] = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.treasuresOffset + i));
+	}
+	for (int i = 0; i <= 12; i++) {
+		vars.treasuresCollected[i+188] = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.explorationOffset + i));
+	}
 	//print(vars.gameTime.ToString());
 }
 
@@ -198,14 +228,24 @@ split
 		return true;
 	}
 	
+	//split name = last collected treasure
+	if (settings["treasurename"]) {
+		for (int i = 0; i < 201; i++) {
+			if (vars.treasuresCollected[i] != vars.prevTreasuresCollected[i] && vars.treasuresCollected[i] == 2) {
+				print(vars.treasureNames[i]);
+				if (vars.treasureNames[i] == currentSplitName) return true;
+			}				
+		}
+	}
+	
 	//first split = globe
-	if (settings["globefirst"] && currentSplit == 0 && vars.globeCollected != vars.prevGlobeCollected &&
-	vars.globeCollected == 2) {
+	if (settings["globefirst"] && currentSplit == 0 &&
+	vars.treasuresCollected[198] != vars.treasuresCollected[198] && vars.treasuresCollected[198] == 2) {
 		return true;
 	}
 	//first split = key
-	if (settings["keyfirst"] && currentSplit == 0 && vars.keyCollected != vars.prevKeyCollected &&
-	vars.keyCollected == 2) {
+	if (settings["keyfirst"] && currentSplit == 0 &&
+	vars.treasuresCollected[200] != vars.treasuresCollected[200] && vars.treasuresCollected[200] == 2) {
 		return true;
 	}
 
