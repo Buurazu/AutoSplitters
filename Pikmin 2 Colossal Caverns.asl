@@ -181,7 +181,6 @@ update
 	for (int i = 0; i <= 12; i++) {
 		vars.treasuresCollected[i+188] = memory.ReadValue<byte>((IntPtr)(vars.startLoc + vars.explorationOffset + i));
 	}
-	//print(vars.gameTime.ToString());
 }
 
 start
@@ -232,7 +231,7 @@ split
 	if (settings["treasurename"]) {
 		for (int i = 0; i < 201; i++) {
 			if (vars.treasuresCollected[i] != vars.prevTreasuresCollected[i] && vars.treasuresCollected[i] == 2) {
-				print(vars.treasureNames[i]);
+				//print(vars.treasureNames[i]);
 				if (vars.treasureNames[i] == currentSplitName) return true;
 			}				
 		}
