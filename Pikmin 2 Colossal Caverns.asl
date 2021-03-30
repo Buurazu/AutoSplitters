@@ -228,12 +228,13 @@ split
 	}
 	
 	//split name = last collected treasure
+	//skip the split if we run into it with the treasure already collected
 	if (settings["treasurename"]) {
 		for (int i = 0; i < 201; i++) {
-			if (vars.treasuresCollected[i] != vars.prevTreasuresCollected[i] && vars.treasuresCollected[i] == 2) {
-				//print(vars.treasureNames[i]);
-				if (vars.treasureNames[i] == currentSplitName) return true;
-			}				
+			if (vars.treasureNames[i] == currentSplitName && vars.treasuresCollected[i] == 2) {
+				if (vars.treasuresCollected[i] != vars.prevTreasuresCollected[i]) return true;
+				else vars.timerModel.SkipSplit();
+			}			
 		}
 	}
 	
