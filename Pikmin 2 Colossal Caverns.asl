@@ -240,12 +240,12 @@ split
 	
 	//first split = globe
 	if (settings["globefirst"] && currentSplit == 0 &&
-	vars.treasuresCollected[198] != vars.treasuresCollected[198] && vars.treasuresCollected[198] == 2) {
+	vars.treasuresCollected[198] != vars.prevTreasuresCollected[198] && vars.treasuresCollected[198] == 2) {
 		return true;
 	}
 	//first split = key
 	if (settings["keyfirst"] && currentSplit == 0 &&
-	vars.treasuresCollected[200] != vars.treasuresCollected[200] && vars.treasuresCollected[200] == 2) {
+	vars.treasuresCollected[200] != vars.prevTreasuresCollected[200] && vars.treasuresCollected[200] == 2) {
 		return true;
 	}
 
