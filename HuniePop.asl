@@ -5,8 +5,30 @@
 
 //_gameManager : "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0;
 //_stage : "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC;
-	
+
 state("HuniePop", "Jan. 23")
+{
+	int displayAffection	: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x3C, 0xBC;
+	int goalAffection		: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x3C, 0xA0;
+	bool victory			: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x3C, 0x8C;
+	bool isBonusRound		: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x3C, 0x7C;
+	int girlID				: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x10, 0x18, 0x10;
+	
+	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+}
+
+state("HuniePop", "Valentine's")
+{
+	int displayAffection	: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x40, 0xC4;
+	int goalAffection		: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x40, 0xA4;
+	bool victory			: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x40, 0x90;
+	bool isBonusRound		: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x40, 0x7C;
+	int girlID				: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x10, 0x18, 0x10;
+	
+	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+}
+
+state("HuniePop", "Jan. 23 Modded")
 {
 	int displayAffection	: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x2C, 0x3C, 0xBC;
 	int goalAffection		: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x2C, 0x3C, 0xA0;
@@ -17,7 +39,7 @@ state("HuniePop", "Jan. 23")
 	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC, 0xA0, 0x80, 0xD0, 0x78;
 }
 
-state("HuniePop", "Valentine's")
+state("HuniePop", "Valentine's Modded")
 {
 	int displayAffection	: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x2C, 0x40, 0xC4;
 	int goalAffection		: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x2C, 0x40, 0xA4;
@@ -40,12 +62,20 @@ init
 	string AsmCsPath = Path.Combine(game.MainModule.FileName, @"..\HuniePop_Data\Managed\Assembly-CSharp.dll");
 	long AsmCsSize = new FileInfo(AsmCsPath).Length;
 	
-	print(AsmCsSize.ToString());
+	print("AssemblyCSharp size: " + AsmCsSize.ToString());
 	switch (AsmCsSize)
 	{
 		case 576512: version = "Jan. 23"; break;
 		case 591360: version = "Valentine's"; break;
 		default: version = "Unknown"; break;
+	}
+	
+	//check if the mod is running by seeing if the doorstop config is present, and HunieMod.dll is present
+	//deleting either are good ways to temporarily disable running the mod
+	if (File.Exists(Path.Combine(game.MainModule.FileName, @"..\doorstop_config.ini")) &&
+		File.Exists(Path.Combine(game.MainModule.FileName, @"..\BepInEx\plugins\HunieMod\HunieMod.dll"))) {
+		if (version == "Jan. 23") version = "Jan. 23 Modded";
+		if (version == "Valentine's") version = "Valentine's Modded";
 	}
 	
 	vars.watchForVenus = true;
