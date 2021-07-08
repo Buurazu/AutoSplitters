@@ -9,7 +9,7 @@ startup {
 	//(check the title bar of the Dolphin window, it's after the game's name)
 	vars.gameID = "GPVE01";
 	
-	//this is just used for debug rpints
+	//this is just used for debug prints
 	vars.gameName = "Pikmin 2";
 	
 
@@ -43,7 +43,7 @@ update
 			foreach (var page in memory.MemoryPages(true))
 			{
 				//print(page.BaseAddress.ToString("X") + " " + page.RegionSize.ToString());
-				if ((int)page.RegionSize < 0x2000000) continue; //checking for 32MB or higher
+				if ((int)page.RegionSize == 0x2000000) continue; //checking for 32MB exactly
 				string hopefullyID = memory.ReadString((IntPtr)(page.BaseAddress), 6);
 				if (hopefullyID == vars.gameID) {
 					print(vars.gameName + " memory found at 0x" + page.BaseAddress.ToString("X"));
