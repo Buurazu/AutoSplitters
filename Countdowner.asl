@@ -1,4 +1,5 @@
 //Very simple ASL that turns LiveSplit into a countdown timer
+//Can play a .wav file at the end of the countdown
 //Make sure to compare to Game Time
 
 state("LiveSplit") { }
@@ -10,6 +11,7 @@ startup {
 init {
 	//Change the sound location here (keep the at sign, just change what's in between the quotation marks)
 	//currently, only .wavs can be used
+	vars.playSoundAtEnd = true;
 	vars.soundLocation = @"D:\fanfare.wav";
 	
 	vars.playedSound = false;
@@ -28,7 +30,7 @@ gameTime
 	vars.elapsedTime = vars.timerModel.CurrentState.CurrentTime.RealTime - vars.timerModel.CurrentState.Run.Offset;
 	
 	if (vars.elapsedTime > vars.targetSeconds) {
-		if (vars.playedSound == false) {
+		if (vars.playSoundAtEnd == true && vars.playedSound == false) {
 			vars.playedSound = true;
 			System.Media.SoundPlayer player = new System.Media.SoundPlayer(vars.soundLocation);
 			player.Play();
