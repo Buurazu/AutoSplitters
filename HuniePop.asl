@@ -6,6 +6,8 @@
 //_gameManager : "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0;
 //_stage : "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC;
 
+//bool interactive		: "HuniePop.exe", 0x00959154, 0x68, 0x27C, 0x68, 0x14, 0xA0, 0x80, 0xD0, 0x78;
+
 state("HuniePop", "Jan. 23")
 {
 	int displayAffection	: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x2C, 0x3C, 0xBC;
@@ -74,8 +76,9 @@ init
 	//deleting either are good ways to temporarily disable running the mod
 	if (File.Exists(Path.Combine(game.MainModule.FileName, @"..\doorstop_config.ini")) &&
 		File.Exists(Path.Combine(game.MainModule.FileName, @"..\BepInEx\plugins\HunieMod\HunieMod.dll"))) {
-		if (version == "Jan. 23") version = "Jan. 23 Modded";
-		if (version == "Valentine's") version = "Valentine's Modded";
+		version = version + " Modded";
+		//if (version == "Jan. 23") version = "Jan. 23 Modded";
+		//if (version == "Valentine's") version = "Valentine's Modded";
 	}
 	
 	vars.watchForVenus = true;
@@ -114,7 +117,7 @@ split
 			return true;
 		}
 		//Dates have to wait until victory is confirmed, due to potential Broken Heart matches
-		if (!current.isBonusRound && current.victory && current.victory != old.victory) {
+		if (!current.isBonusRound && current.victory && (current.victory != old.victory || current.displayAffection != old.displayAffection)) {
 			return true;
 		}
 	}
