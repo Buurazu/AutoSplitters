@@ -118,7 +118,8 @@ split
 					return true;
 				}
 				//Dates have to wait until victory is confirmed, due to potential... uh... switching off Nora?
-				if (settings["dateonly"] && !current.isBonusRound && current.victory == 1 && current.victory != old.victory) {
+				if (settings["dateonly"] && !current.isBonusRound && current.victory == 1 &&
+					(current.victory != old.victory || current.displayAffection != old.displayAffection)) {
 					return true;
 				}
 			}
