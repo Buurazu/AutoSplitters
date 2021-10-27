@@ -17,6 +17,7 @@ state("HuniePop", "Jan. 23")
 	int girlID				: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x10, 0x18, 0x10;
 	
 	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+	int saveFiles			: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x8C;
 }
 
 state("HuniePop", "Valentine's")
@@ -28,6 +29,7 @@ state("HuniePop", "Valentine's")
 	int girlID				: "mono.dll", 0x00209554, 0x10, 0x154, 0x0, 0x10, 0x18, 0x10;
 	
 	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+	int saveFiles			: "mono.dll", 0x00209554, 0x10, 0x154, 0xC, 0xA0, 0x80, 0xD0, 0x8C;
 }
 
 state("HuniePop", "Jan. 23 Modded")
@@ -39,6 +41,7 @@ state("HuniePop", "Jan. 23 Modded")
 	int girlID				: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x10, 0x18, 0x10;
 	
 	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+	int saveFiles			: "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC, 0xA0, 0x80, 0xD0, 0x8C;
 }
 
 state("HuniePop", "Valentine's Modded")
@@ -50,6 +53,7 @@ state("HuniePop", "Valentine's Modded")
 	int girlID				: "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0, 0x10, 0x18, 0x10;
 	
 	bool interactive		: "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC, 0xA0, 0x80, 0xD0, 0x78;
+	int saveFiles			: "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC, 0xA0, 0x80, 0xD0, 0x8C;
 }
 
 startup {
@@ -83,15 +87,28 @@ init
 	
 	vars.watchForVenus = true;
 	vars.venusCounter = 0;
+	vars.waitAFrame = 5;
+	
+	//if reset on exit is disabled, we don't want to reset the first time we see the title screen
+	vars.resetAllowed = settings["resetonexit"];
+}
+
+update
+{
+	if (current.interactive == true && old.interactive == false) {
+		//fix a bug where occasionally LoadScreen.interactive is true for one frame and makes splits start
+		vars.waitAFrame = 5;
+	}
 }
 
 start
 {	
 	//check if the LoadScreen is interactive
 	//note that this starts splits on file load too, but that's not really a bad thing
-	if (current.interactive == false && old.interactive == true) {
+	if (current.interactive == false && old.interactive == true && vars.waitAFrame <= 0) {
 			return true;
 	}
+	vars.waitAFrame = vars.waitAFrame - 1;
 }
 
 exit
@@ -103,10 +120,9 @@ exit
 reset
 {
 	//return to main menu = reset
-	//there's no way the title screen would ever be interactive again without the mod
-	if (current.interactive == true && old.interactive == false) {
+	//LoadScreen's save files list is nulled once the load screen is exited
+	if (current.saveFiles != 0 && old.saveFiles == 0 && vars.resetAllowed)
 		return true;
-	}
 }
 
 split
@@ -129,6 +145,10 @@ split
 		if (vars.venusCounter == 0) return true;
 	}
 	
+	//allow splitting the next time the menu is seen when we see a girl (except Tiffany I guess lol)
+	if (current.girlID != 0) {
+		vars.resetAllowed = true;
+	}
 	//disable Venus splitting if Celeste or Momo have been seen
 	if (current.girlID == 10 || current.girlID == 11) {
 		vars.watchForVenus = false;
