@@ -85,8 +85,6 @@ init
 		//if (version == "Valentine's") version = "Valentine's Modded";
 	}
 	
-	vars.watchForVenus = true;
-	vars.venusCounter = 0;
 	vars.waitAFrame = 5;
 	
 	//if reset on exit is disabled, we don't want to reset the first time we see the title screen
@@ -138,24 +136,8 @@ split
 		}
 	}
 	
-	//check for Unlock Venus ending
-	//NOTE: if you exit and relaunch the game in late-game of All Panties, there may be false positives with Venus
-	if (vars.venusCounter > 0) {
-		vars.venusCounter--;
-		if (vars.venusCounter == 0) return true;
-	}
-	
 	//allow splitting the next time the menu is seen when we see a girl (except Tiffany I guess lol)
 	if (current.girlID != 0) {
 		vars.resetAllowed = true;
-	}
-	//disable Venus splitting if Celeste or Momo have been seen
-	if (current.girlID == 10 || current.girlID == 11) {
-		vars.watchForVenus = false;
-	}
-	if (vars.watchForVenus && current.girlID == 12) {
-		//split a couple frames after Venus is set as current girl, if we're watching for her. it's not scientific but w/e
-		vars.watchForVenus = false;
-		vars.venusCounter = 5;
 	}
 }
