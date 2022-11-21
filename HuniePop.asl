@@ -1,7 +1,7 @@
 //HuniePop AutoSplitter
 //created by RShields and Buurazu
 
-//DO NOT USE THIS FOR 100%, for obvious reasons (like not knowing how many dates it will be, and possibly closing the game midway)
+//DOES NOT AUTOSPLIT ON 100% COMPLETION, there's no way I can do that check in here
 
 //_gameManager : "mono.dll", 0x00209554, 0x10, 0x5A4, 0x0;
 //_stage : "mono.dll", 0x00209554, 0x10, 0x5A4, 0xC;
@@ -58,6 +58,8 @@ state("HuniePop", "Valentine's Modded")
 
 startup {
 	vars.timerModel = new TimerModel { CurrentState = timer };
+	vars.splitsPerGirl = new int[13];
+	vars.bonusPerGirl = new bool[13];
 	settings.Add("resetonexit",true,"Reset on Game Exit");
 	settings.SetToolTip("resetonexit","Disable this if you want to be able to relaunch the game without a reset (like for fixing route mistakes / undoing a failed date)");
 }
@@ -104,6 +106,8 @@ start
 	//check if the LoadScreen is interactive
 	//note that this starts splits on file load too, but that's not really a bad thing
 	if (current.interactive == false && old.interactive == true && vars.waitAFrame <= 0) {
+			vars.splitsPerGirl = new int[13];
+			vars.bonusPerGirl = new bool[13];
 			return true;
 	}
 	vars.waitAFrame = vars.waitAFrame - 1;
@@ -119,24 +123,29 @@ reset
 {
 	//return to main menu = reset
 	//LoadScreen's save files list is nulled once the load screen is exited
-	if (current.saveFiles != 0 && old.saveFiles == 0 && vars.resetAllowed)
+	if (current.saveFiles != 0 && old.saveFiles == 0 && vars.resetAllowed) {
+		vars.splitsPerGirl = new int[13];
+		vars.bonusPerGirl = new bool[13];
 		return true;
+	}
 }
 
 split
 {
 	if (current.displayAffection == current.goalAffection) {
 		//Bonus rounds split the frame that display affection = goal affection
-		if (current.isBonusRound && current.displayAffection != old.displayAffection) {
+		if (current.isBonusRound && current.displayAffection != old.displayAffection && !vars.bonusPerGirl[current.girlID]) {
+			vars.bonusPerGirl[current.girlID] = true;
 			return true;
 		}
 		//Dates have to wait until victory is confirmed, due to potential Broken Heart matches
-		if (!current.isBonusRound && current.victory && (current.victory != old.victory || current.displayAffection != old.displayAffection)) {
+		if (!current.isBonusRound && current.victory && (current.victory != old.victory || current.displayAffection != old.displayAffection) && vars.splitsPerGirl[current.girlID] < 4) {
+			vars.splitsPerGirl[current.girlID] += 1;
 			return true;
 		}
 	}
 	
-	//allow splitting the next time the menu is seen when we see a girl (except Tiffany I guess lol)
+	//allow splitting the next time the menu is seen when we see a girl
 	if (current.girlID != 0) {
 		vars.resetAllowed = true;
 	}
