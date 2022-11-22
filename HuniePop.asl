@@ -122,7 +122,10 @@ start
 exit
 {
 	//exiting the game = reset
-	if (settings["resetonexit"]) vars.timerModel.Reset();
+	if (settings["resetonexit"]) {
+		vars.InitSplitArrays();
+		vars.timerModel.Reset();
+	}
 }
 
 reset
