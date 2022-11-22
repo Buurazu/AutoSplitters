@@ -58,10 +58,17 @@ state("HuniePop", "Valentine's Modded")
 
 startup {
 	vars.timerModel = new TimerModel { CurrentState = timer };
-	vars.splitsPerGirl = new int[13];
-	vars.bonusPerGirl = new bool[13];
+	
 	settings.Add("resetonexit",true,"Reset on Game Exit");
 	settings.SetToolTip("resetonexit","Disable this if you want to be able to relaunch the game without a reset (like for fixing route mistakes / undoing a failed date)");
+	
+	Action InitSplitArrays = () => {
+		vars.splitsPerGirl = new int[13];
+		vars.splitsPerGirl[9] = -1;
+		vars.bonusPerGirl = new bool[13];
+	};
+	vars.InitSplitArrays = InitSplitArrays;
+	vars.InitSplitArrays();
 }
 
 init
@@ -106,8 +113,7 @@ start
 	//check if the LoadScreen is interactive
 	//note that this starts splits on file load too, but that's not really a bad thing
 	if (current.interactive == false && old.interactive == true && vars.waitAFrame <= 0) {
-			vars.splitsPerGirl = new int[13];
-			vars.bonusPerGirl = new bool[13];
+			vars.InitSplitArrays();
 			return true;
 	}
 	vars.waitAFrame = vars.waitAFrame - 1;
@@ -124,8 +130,7 @@ reset
 	//return to main menu = reset
 	//LoadScreen's save files list is nulled once the load screen is exited
 	if (current.saveFiles != 0 && old.saveFiles == 0 && vars.resetAllowed) {
-		vars.splitsPerGirl = new int[13];
-		vars.bonusPerGirl = new bool[13];
+		vars.InitSplitArrays();
 		return true;
 	}
 }
