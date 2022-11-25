@@ -62,6 +62,12 @@ startup {
 	settings.Add("resetonexit",true,"Reset on Game Exit");
 	settings.SetToolTip("resetonexit","Disable this if you want to be able to relaunch the game without a reset (like for fixing route mistakes / undoing a failed date)");
 	
+	settings.Add("limit4", true, "Limit 4+1 Splits Per Girl");
+	settings.SetToolTip("limit4", "Limit girls to splitting after dates 4 times (plus 1 after bonus rounds), to help with 100% compatibility");
+	
+	settings.Add("autorenamesplits", false, "Auto-Rename \"GirlName #\" Splits");
+	settings.SetToolTip("autorenamesplits", "The autosplitter will dynamically edit your split names after a split to help with route changes. Note it's an EDIT, so the split name needs a girl's first name, and 1/2/3/4/Bonus in it.");
+	
 	Action InitSplitArrays = () => {
 		vars.splitsPerGirl = new int[13];
 		vars.splitsPerGirl[9] = -1;
@@ -69,6 +75,24 @@ startup {
 	};
 	vars.InitSplitArrays = InitSplitArrays;
 	vars.InitSplitArrays();
+	
+	string[] girlNames = new string[] { "Tiffany", "Aiko", "Kyanna", "Audrey", "Lola", "Nikki", "Jessie", "Beli", "Kyu", "Momo", "Celeste", "Venus" };
+	string[] dateNames = new string[] { "1", "2", "3", "4", "Bonus" };
+	
+	Action<int,string> RenameSplit = (girlID,dateName) => {
+		string girlName = girlNames[girlID-1];
+		string currentSplitName = vars.timerModel.CurrentState.CurrentSplit.Name;
+		
+		foreach (string s in girlNames) {
+			currentSplitName = currentSplitName.Replace(s, girlName);
+		}
+		foreach (string s in dateNames) {
+			currentSplitName = currentSplitName.Replace(s, dateName);
+		}
+		
+		vars.timerModel.CurrentState.CurrentSplit.Name = currentSplitName;
+	};
+	vars.RenameSplit = RenameSplit;
 }
 
 init
@@ -142,14 +166,22 @@ split
 {
 	if (current.displayAffection == current.goalAffection) {
 		//Bonus rounds split the frame that display affection = goal affection
-		if (current.isBonusRound && current.displayAffection != old.displayAffection && !vars.bonusPerGirl[current.girlID]) {
-			vars.bonusPerGirl[current.girlID] = true;
-			return true;
+		if (current.isBonusRound && current.displayAffection != old.displayAffection) {
+			if (!settings["limit4"] || !vars.bonusPerGirl[current.girlID]) {
+				if (settings["autorenamesplits"] && !vars.bonusPerGirl[current.girlID]) vars.RenameSplit(current.girlID, "Bonus");
+				vars.bonusPerGirl[current.girlID] = true;
+				
+				return true;
+			}
 		}
 		//Dates have to wait until victory is confirmed, due to potential Broken Heart matches
-		if (!current.isBonusRound && current.victory && (current.victory != old.victory || current.displayAffection != old.displayAffection) && vars.splitsPerGirl[current.girlID] < 4) {
-			vars.splitsPerGirl[current.girlID] += 1;
-			return true;
+		if (!current.isBonusRound && current.victory && (current.victory != old.victory || current.displayAffection != old.displayAffection)) {
+			if (!settings["limit4"] || vars.splitsPerGirl[current.girlID] < 4) {
+				vars.splitsPerGirl[current.girlID] += 1;
+				if (settings["autorenamesplits"] && vars.splitsPerGirl[current.girlID] <= 4 && vars.splitsPerGirl[current.girlID] > 0) vars.RenameSplit(current.girlID, vars.splitsPerGirl[current.girlID].ToString());
+				
+				return true;
+			}
 		}
 	}
 	
