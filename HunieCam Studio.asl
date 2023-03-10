@@ -16,6 +16,8 @@ startup {
 	settings.SetToolTip("trophysplits","The autosplitter will split at 5,000, 10,000, 25,000, 50,000, and 100,000 fans");
 	settings.Add("splitnamesplits",true,"Split on Trophy/Fan Count Split Names");
 	settings.SetToolTip("splitnamesplits","The autosplitter will split on specific fan counts by checking the FIRST WORD of the current split name for either a number (ex. '50,000 Fans') or trophy type (ex. 'Platinum Trophy')");
+	settings.Add("platinumlast",false,"Last Split = Platinum Trophy");
+	settings.SetToolTip("platinumlast","The autosplitter will split at 50,000 fans if it's the last split (so you can name it whatever)");
 	
 	settings.Add("resetonexit",true,"Reset on Game Exit");
 	settings.SetToolTip("resetonexit","Disable this if you want to be able to relaunch the game without a reset");
@@ -89,7 +91,6 @@ start
 	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		var theFile = memory.ReadValue<int>((IntPtr)vars.modVarLoc+12);
-		print(theVar.ToString());
 		//111 = new game just started
 		if (theVar == 111) {
 			vars.runSaveFile = theFile;
@@ -134,10 +135,12 @@ split
 		vars.currentFans = memory.ReadValue<int>((IntPtr)vars.modVarLoc+8);
 		
 		var currentSplitName = vars.timerModel.CurrentState.CurrentSplit.Name;
-		//var currentSplit = vars.timerModel.CurrentState.CurrentSplitIndex;
+		var currentSplit = vars.timerModel.CurrentState.CurrentSplitIndex;
 		
-		print(vars.currentDay.ToString());
-		print(vars.currentFans.ToString());
+		//final split = platinum
+		if (settings["platinumlast"] && currentSplit == vars.timerModel.CurrentState.Run.Count-1 && vars.currentFans >= 50000 && vars.prevFans < 50000) {
+			return true;
+		}
 		
 		if (settings["splitnamesplits"]) {
 			//check what the first word of the split name is
