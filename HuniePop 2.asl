@@ -95,21 +95,9 @@ init
 		File.Exists(Path.Combine(game.MainModule.FileName, @"..\BepInEx\plugins\HP2SpeedrunMod\HP2SpeedrunMod.dll"))) {
 		//Locate HP2SR's BasePatches.InitSearchForMe
 		//123456789 = new launch
-		vars.gameManagerLoc = 0;
-		var attempts = 0;
-		//Search for the mod, then for base game if mod isn't found yet (game loading)
+		//Search for the mod
 		while (vars.modVarLoc == 0) {
-			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? ?? ?? ?? ?? C7 00 15 CD 5B 07");
-			vars.search(target,"HP2SR");
-			vars.modVarLoc = memory.ReadValue<long>((IntPtr)((long)vars.addr + 1));
-		}
-		while (vars.gameManagerLoc == 0 && vars.modVarLoc == 0) {
-			target = new SigScanTarget(0, "55 48 8B EC 48 83 EC 30 48 89 4D F8 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 08 33 D2 66 66 90 49 BB ?? ?? ?? ?? ?? ?? ?? ?? 41 FF D3 85 C0");
-			vars.search(target,"Game:set_Manager");
-			break;
-		}
-		while (vars.modVarLoc == 0 && attempts < 2) {
-			attempts++;
+			print("Searching for mod...");
 			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? ?? ?? ?? ?? C7 00 15 CD 5B 07");
 			vars.search(target,"HP2SR");
 			vars.modVarLoc = memory.ReadValue<long>((IntPtr)((long)vars.addr + 1));
