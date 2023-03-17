@@ -122,12 +122,11 @@ exit
 
 reset
 {
-	//return to main menu = reset
 	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		if (theVar == 123456789) vars.dontReset = false;
-		else if (theVar == 111 && !vars.dontReset && settings["resetonnewgame"]) {
-			vars.runSaveFile = -1;
+		if (theVar == 111) vars.runSaveFile = -1;
+		if (theVar == 111 && !vars.dontReset && settings["resetonnewgame"]) {
 			return true;
 		}
 	}
@@ -136,9 +135,10 @@ reset
 split
 {
 	if (vars.modVarLoc != 0) {
+		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		var theFile = memory.ReadValue<int>((IntPtr)vars.modVarLoc+12);
-		if (vars.runSaveFile == -1) vars.runSaveFile = theFile;
-		if (theFile != vars.runSaveFile) return;
+		if (vars.runSaveFile == -1 || theVar == 111) vars.runSaveFile = theFile;
+		if (theFile != vars.runSaveFile || theVar == 111) return;
 		
 		vars.prevDay = vars.currentDay;
 		vars.currentDay = memory.ReadValue<int>((IntPtr)vars.modVarLoc+4);
