@@ -72,7 +72,7 @@ init
 		var attempts = 0;
 		//Search for the base game if mod isn't found yet (game loading)
 			print("Searching for mod...");
-			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? C7 00 15 CD 5B 07");
+			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? C7 00 14 CD 5B 07");
 			vars.search(target,"HCSR");
 			vars.modVarLoc = memory.ReadValue<int>((IntPtr)(vars.addr + 1));
 		vars.gameManagerLoc = 0;
@@ -85,7 +85,7 @@ init
 		while (vars.modVarLoc == 0 && attempts < 20) {
 			print("Searching for mod...");
 			attempts++;
-			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? C7 00 15 CD 5B 07");
+			target = new SigScanTarget(0, "B8 ?? ?? ?? ?? C7 00 14 CD 5B 07");
 			vars.search(target,"HCSR");
 			vars.modVarLoc = memory.ReadValue<int>((IntPtr)(vars.addr + 1));
 		}
@@ -102,14 +102,13 @@ start
 	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		var theFile = memory.ReadValue<int>((IntPtr)vars.modVarLoc+12);
-		//111 = new game just started
-		if (theVar == 111) {
+		//123 = new game just started, Kyu is talking
+		if (theVar == 123) {
 			vars.runSaveFile = theFile;
 			vars.currentDay = 1;
 			vars.prevDay = 1;
 			vars.currentFans = 0;
 			vars.prevFans = 0;
-			vars.dontReset = true;
 			return true;
 		}
 	}
@@ -124,9 +123,9 @@ reset
 {
 	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
-		if (theVar == 123456789) vars.dontReset = false;
+		//reset our run's save file on new game (for 100%)
 		if (theVar == 111) vars.runSaveFile = -1;
-		if (theVar == 111 && !vars.dontReset && settings["resetonnewgame"]) {
+		if (theVar == 111 && settings["resetonnewgame"]) {
 			return true;
 		}
 	}
@@ -137,8 +136,8 @@ split
 	if (vars.modVarLoc != 0) {
 		var theVar = memory.ReadValue<int>((IntPtr)vars.modVarLoc);
 		var theFile = memory.ReadValue<int>((IntPtr)vars.modVarLoc+12);
-		if (vars.runSaveFile == -1 || theVar == 111) vars.runSaveFile = theFile;
-		if (theFile != vars.runSaveFile || theVar == 111) return;
+		if (vars.runSaveFile == -1 && theVar == 123) vars.runSaveFile = theFile;
+		if (vars.runSaveFile == -1 || theFile != vars.runSaveFile || theVar == 111) return;
 		
 		vars.prevDay = vars.currentDay;
 		vars.currentDay = memory.ReadValue<int>((IntPtr)vars.modVarLoc+4);
